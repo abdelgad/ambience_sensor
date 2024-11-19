@@ -15,6 +15,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test,
   "com.typesafe.akka" %% "akka-remote" % AkkaVersion
 )
+//Comunication with arduino
+
+libraryDependencies += "net.jockx" % "test-jssc" % "2.9.3"
 
 // logger
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.6" // Compatible with SLF4J
