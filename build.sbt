@@ -20,10 +20,13 @@ libraryDependencies ++= Seq(
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.6" // Compatible with SLF4J
 
 // spray-json
-libraryDependencies += "io.spray" %%  "spray-json" % "1.3.6"
+libraryDependencies += "io.spray" %% "spray-json" % "1.3.6"
 
 // JavaCV (webcam)
-libraryDependencies += "org.bytedeco" % "javacv-platform" % "1.5.10"
+libraryDependencies += "org.bytedeco" % "javacv-platform" % "1.5.11"
 
 // https://github.com/haifengl/smile
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.1"
+
+// phidget22
+unmanagedJars in Compile += file("lib/phidget22.jar")

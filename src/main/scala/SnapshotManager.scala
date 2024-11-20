@@ -16,11 +16,17 @@ import SnapshotJsonProtocol.*
 
 // Messages for button events and sensor readings
 case object Start
+
 case object ButtonPressed
+
 case object ReadTemperature
+
 case object ReadHumidity
+
 case object ReadIlluminance
+
 case class DisplayMessage(message: String)
+
 case class SensorReading(value: Double)
 
 
@@ -30,7 +36,7 @@ class SnapshotManager(
                        humiditySensor: ActorRef,
                        lightSensor: ActorRef,
                        webcamActor: ActorRef,
-                       fileServer : ActorRef
+                       fileServer: ActorRef
                      ) extends Actor {
 
   private implicit val timeout: Timeout = Timeout(5.seconds) // Timeout for ask pattern
@@ -43,9 +49,9 @@ class SnapshotManager(
       fileServer ! NotifySynchronization
 
     case ButtonPressed =>
-        lcdActor ! DisplayMessage("Recording started...Hold still")
-        println("Recording started...Hold still")
-        collectSensorDataAndSaveSnapshot()
+      lcdActor ! DisplayMessage("Recording started...Hold still")
+      println("Recording started...Hold still")
+      collectSensorDataAndSaveSnapshot()
 
     case _ =>
       println("Unknown message received.")
