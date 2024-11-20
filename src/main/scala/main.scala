@@ -1,5 +1,6 @@
 import akka.actor.{ActorSystem, Props}
 
+
 object AmbienceSensor extends App {
 
   val system = ActorSystem("AmbienceSensor")
@@ -14,7 +15,8 @@ object AmbienceSensor extends App {
   val fileServer = system.actorOf(Props(new FileServerActor("snapshots", ambienceDiffuserPath)), "fileServer")
   val snapshotManager = system.actorOf(Props(new SnapshotManager(lcdActor, tempSensor, humiditySensor, lightSensor, webcam, fileServer)), "snapshotManager")
   val forceSensor = system.actorOf(Props(new ForceSensorActor(snapshotManager)), "forceSensor")
-
+  
+  
   // Start the system
   snapshotManager ! Start
 }

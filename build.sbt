@@ -27,3 +27,6 @@ libraryDependencies += "org.bytedeco" % "javacv-platform" % "1.5.10"
 
 // https://github.com/haifengl/smile
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.1"
+
+// phidget22
+unmanagedJars in Compile += file("lib/phidget22.jar")

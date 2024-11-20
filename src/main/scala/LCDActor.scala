@@ -1,5 +1,6 @@
 import akka.actor.Actor
-import com.phidget22._
+import com.phidget22.{LCD, LCDFont, PhidgetException}
+
 import scala.util.Try
 
 class LCDActor extends Actor {

@@ -40,12 +40,12 @@ class SnapshotManager(
     case Start =>
       lcdActor ! DisplayMessage("Press button to record...")
       println("System ready. Press button to record...")
-      fileServer ! NotifySynchronization
+    //      fileServer ! NotifySynchronization
 
     case ButtonPressed =>
-        lcdActor ! DisplayMessage("Recording started...Hold still")
-        println("Recording started...Hold still")
-        collectSensorDataAndSaveSnapshot()
+      lcdActor ! DisplayMessage("Recording started...Hold still")
+      println("Recording started...Hold still")
+      collectSensorDataAndSaveSnapshot()
 
     case _ =>
       println("Unknown message received.")
