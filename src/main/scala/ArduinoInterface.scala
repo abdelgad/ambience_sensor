@@ -1,4 +1,4 @@
-import net.jssc.{SerialPort, SerialPortException}
+import jssc.{SerialPort, SerialPortException}
 
 object ArduinoInterface {
   /**
