@@ -1,14 +1,14 @@
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 import akka.actor.{Actor, ActorRef}
+//import com.phidget22.{TemperatureSensor, VoltageRatioInput, VoltageRatioInputSensorChangeEvent, VoltageRatioSensorType}
+import com.phidget22.{HumiditySensor, LightSensor, TemperatureSensor, VoltageRatioInput, VoltageRatioInputSensorChangeEvent, VoltageRatioSensorType}
+import org.bytedeco.javacv.{Frame, Java2DFrameConverter, OpenCVFrameConverter, OpenCVFrameGrabber}
+import org.bytedeco.opencv.global.opencv_imgproc.*
+import org.bytedeco.opencv.global.opencv_imgcodecs.*
 
-import com.phidget22._
-
-import org.bytedeco.javacv.{Frame, OpenCVFrameGrabber, OpenCVFrameConverter, Java2DFrameConverter}
-import org.bytedeco.opencv.global.opencv_imgproc._
-import org.bytedeco.opencv.global.opencv_imgcodecs._
 import java.awt.image.BufferedImage
 import java.awt.Color
 import smile.clustering.kmeans
@@ -17,26 +17,32 @@ import smile.clustering.kmeans
 case object CaptureImage
 
 
-class ForceSensorActor(snapshotManager: ActorRef) extends Actor {
-  private val ACTIVATION_THRESHOLD = 0.5
+class ForceSensorActor(forceSensor: VoltageRatioInput, snapshotManager: ActorRef) extends Actor {
+  private val ACTIVATION_THRESHOLD = 0.1
 
-  private val forceSensor = new VoltageRatioInput()
-  forceSensor.setIsHubPortDevice(true)
-  forceSensor.setHubPort(3)
-  forceSensor.setSensorType(VoltageRatioSensorType.PN_1106)
 
   override def preStart(): Unit = {
-    // context.system.scheduler.scheduleOnce(8.seconds, snapshotManager, ButtonPressed)
+    //     context.system.scheduler.scheduleOnce(8.seconds, snapshotManager, ButtonPressed)
+    Try {
 
-    // Set up listener for sensor value changes
-    forceSensor.addSensorChangeListener((event: VoltageRatioInputSensorChangeEvent) => {
-      val sensorValue = event.getSensorValue
-      if (sensorValue > ACTIVATION_THRESHOLD) {
-        // Button press
-        snapshotManager ! ButtonPressed
-      }
-    })
-    forceSensor.open(5000)
+      forceSensor.setIsHubPortDevice(true)
+      forceSensor.setHubPort(3)
+
+      // Set up listener for sensor value changes
+      forceSensor.addSensorChangeListener((event: VoltageRatioInputSensorChangeEvent) => {
+        val sensorValue = event.getSensorValue
+        if (sensorValue > ACTIVATION_THRESHOLD) {
+          // Button press
+          snapshotManager ! ButtonPressed
+        }
+      })
+
+      forceSensor.open(5000)
+      forceSensor.setSensorType(VoltageRatioSensorType.PN_1106)
+    } match {
+      case Success(_) => // Do nothing
+      case Failure(exception) => println("ForceSensorActor : Failed to setup force sensor")
+    }
   }
 
   override def postStop(): Unit = {
@@ -47,15 +53,13 @@ class ForceSensorActor(snapshotManager: ActorRef) extends Actor {
 }
 
 
-class TemperatureSensorActor extends Actor {
+class TemperatureSensorActor(temperatureSensor: TemperatureSensor) extends Actor {
   def receive: Receive = {
     case ReadTemperature =>
-      println("TemperatureSensorActor : receive")
       val temperature = Try {
-        val sensor = new TemperatureSensor()
-        sensor.open(5000)
-        val value = sensor.getTemperature
-        sensor.close()
+        temperatureSensor.open(5000)
+        val value = temperatureSensor.getTemperature
+        temperatureSensor.close()
         value
       }
       sender() ! temperature.toOption.map(SensorReading)
@@ -63,15 +67,13 @@ class TemperatureSensorActor extends Actor {
 }
 
 
-class HumiditySensorActor extends Actor {
+class HumiditySensorActor(humiditySensor: HumiditySensor) extends Actor {
   def receive: Receive = {
     case ReadHumidity =>
-      println("HumiditySensorActor : receive")
       val humidity = Try {
-        val sensor = new HumiditySensor()
-        sensor.open(5000)
-        val value = sensor.getHumidity
-        sensor.close()
+        humiditySensor.open(5000)
+        val value = humiditySensor.getHumidity
+        humiditySensor.close()
         value
       }
       sender() ! humidity.toOption.map(SensorReading)
@@ -79,15 +81,13 @@ class HumiditySensorActor extends Actor {
 }
 
 
-class LightSensorActor extends Actor {
+class LightSensorActor(lightSensor: LightSensor) extends Actor {
   def receive: Receive = {
     case ReadIlluminance =>
-      println("LightSensorActor : receive")
       val illuminance = Try {
-        val sensor = new LightSensor()
-        sensor.open(5000)
-        val value = sensor.getIlluminance
-        sensor.close()
+        lightSensor.open(5000)
+        val value = lightSensor.getIlluminance
+        lightSensor.close()
         value
       }
       sender() ! illuminance.toOption.map(SensorReading)
