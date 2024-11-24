@@ -10,49 +10,52 @@ object ArduinoInterface {
   def collectData(portName: String, duration: Int): (Int, List[Int]) = {
     val serialPort = new SerialPort(portName)
     try {
-      // Ouverture du port série
       serialPort.openPort()
-      serialPort.setParams(SerialPort.BAUDRATE_9600,
+      serialPort.setParams(
+        SerialPort.BAUDRATE_9600,
         SerialPort.DATABITS_8,
         SerialPort.STOPBITS_1,
-        SerialPort.PARITY_NONE)
+        SerialPort.PARITY_NONE
+      )
 
-      // Liste pour stocker les données sonores
+      // Initialisation des variables
       var soundData: List[Int] = List()
       var bpm: Option[Int] = None
       val startTime = System.currentTimeMillis()
 
-      // Envoi d'une commande de démarrage implicite
+      // Commande de démarrage
       serialPort.writeString("E")
+      Thread.sleep(500) // Attendre le début de l’enregistrement
 
       while (System.currentTimeMillis() - startTime < duration * 1000) {
-        // Lecture des données depuis l'Arduino
         val rawData = serialPort.readString()
-        if (rawData != null) {
+        if (rawData != null && rawData.nonEmpty) {
           rawData.trim.split("\n").foreach { line =>
-            if (line.startsWith("BPM:")) {
-              bpm = Some(line.stripPrefix("BPM:").trim.toInt)
-            } else if (line.startsWith("SOUND:")) {
-              val soundValue = line.stripPrefix("SOUND:").trim.toInt
-              soundData = soundData :+ soundValue
+            if (line.startsWith("BPM: ")) {
+              bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
+            } else if (line.startsWith("DBS: ")) {
+              line.stripPrefix("DBS: ").split(", ").map(_.trim.toFloat).foreach { soundValue =>
+                soundData = soundData :+ soundValue.toInt
+              }
             }
           }
         }
       }
 
-      // Arrêt de l'acquisition
+      // Arrêt de l'enregistrement
       serialPort.writeString("T")
+      Thread.sleep(1000) // Assurer que toutes les données sont reçues
 
-      // Récupération finale des données
-      Thread.sleep(100) // Petit délai pour s'assurer de récupérer les derniers envois
+      // Dernière lecture des données
       val finalData = serialPort.readString()
-      if (finalData != null) {
+      if (finalData != null && finalData.nonEmpty) {
         finalData.trim.split("\n").foreach { line =>
-          if (line.startsWith("BPM:")) {
-            bpm = Some(line.stripPrefix("BPM:").trim.toInt)
-          } else if (line.startsWith("SOUND:")) {
-            val soundValue = line.stripPrefix("SOUND:").trim.toInt
-            soundData = soundData :+ soundValue
+          if (line.startsWith("BPM: ")) {
+            bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
+          } else if (line.startsWith("DBS: ")) {
+            line.stripPrefix("DBS: ").split(", ").map(_.trim.toFloat).foreach { soundValue =>
+              soundData = soundData :+ soundValue.toInt
+            }
           }
         }
       }
@@ -63,7 +66,6 @@ object ArduinoInterface {
         println(s"Erreur de communication avec le port série : ${ex.getMessage}")
         (0, List())
     } finally {
-      // Fermeture du port série
       if (serialPort.isOpened) serialPort.closePort()
     }
   }
