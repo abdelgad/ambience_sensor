@@ -25,7 +25,8 @@ object AmbienceSensor extends App {
   val snapshotManager = system.actorOf(Props(new SnapshotManager(lcdActor, tempSensorActor, humiditySensorActor, lightSensorActor, webcam, fileServerActor)), "snapshotManager")
 
   val forceSensorActor = system.actorOf(Props(new ForceSensorActor(forceSensor, snapshotManager)), "forceSensor")
-
+  
+  val wifiMonitorActor = system.actorOf(Props(new WifiMonitorActor(snapshotManager)), "wifiMonitor")
 
 
   // Start the system

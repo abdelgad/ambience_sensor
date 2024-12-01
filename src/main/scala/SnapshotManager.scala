@@ -53,6 +53,9 @@ class SnapshotManager(
       println("Recording started...Hold still")
       collectSensorDataAndSaveSnapshot()
 
+    case WifiReconnected =>
+      fileServer ! NotifySynchronization
+      
     case _ =>
       println("Unknown message received.")
   }
