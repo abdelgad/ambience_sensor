@@ -39,7 +39,7 @@ class SnapshotManager(
                        fileServer: ActorRef
                      ) extends Actor {
 
-  private implicit val timeout: Timeout = Timeout(5.seconds) // Timeout for ask pattern
+  private implicit val timeout: Timeout = Timeout(20.seconds) // Timeout for ask pattern
 
 
   def receive: Receive = {
