@@ -3,9 +3,7 @@ import scala.concurrent.duration._
 import scala.sys.process._
 
 case object WifiReconnected
-
 case object WifiDisconnected
-
 case object CheckWifiStatus
 
 class WifiMonitorActor(snapshotManager: ActorRef) extends Actor {
