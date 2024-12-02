@@ -6,7 +6,7 @@ case object NotifySynchronization
 case class FileList(files: Set[String])
 case class RequestFile(fileName: String)
 case class FileContent(fileName: String, content: String)
-case object SendHello
+
 
 class FileServerActor(folderPath: String, clientAddress: String) extends Actor{
   override def receive: Receive = {

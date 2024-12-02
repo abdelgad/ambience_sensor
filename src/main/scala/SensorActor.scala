@@ -1,20 +1,19 @@
-import scala.concurrent.duration.*
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 import akka.actor.{Actor, ActorRef}
-//import com.phidget22.{TemperatureSensor, VoltageRatioInput, VoltageRatioInputSensorChangeEvent, VoltageRatioSensorType}
 import com.phidget22.{HumiditySensor, LightSensor, TemperatureSensor, VoltageRatioInput, VoltageRatioInputSensorChangeEvent, VoltageRatioSensorType}
 import org.bytedeco.javacv.{Frame, Java2DFrameConverter, OpenCVFrameConverter, OpenCVFrameGrabber}
-import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.global.opencv_imgcodecs.*
-
 import java.awt.image.BufferedImage
 import java.awt.Color
 import smile.clustering.kmeans
 
 
+case object ReadTemperature
+case object ReadHumidity
+case object ReadIlluminance
 case object CaptureImage
+case class SensorReading(value: Double)
 
 
 class ForceSensorActor(forceSensor: VoltageRatioInput, snapshotManager: ActorRef) extends Actor {
@@ -22,9 +21,7 @@ class ForceSensorActor(forceSensor: VoltageRatioInput, snapshotManager: ActorRef
 
 
   override def preStart(): Unit = {
-    //     context.system.scheduler.scheduleOnce(8.seconds, snapshotManager, ButtonPressed)
     Try {
-
       forceSensor.setIsHubPortDevice(true)
       forceSensor.setHubPort(3)
 
@@ -100,10 +97,12 @@ class WebcamActor extends Actor {
     case CaptureImage =>
       val senderRef = sender()
 
-      val grabber = new OpenCVFrameGrabber(0) // Use the default webcam
       val result = Try {
+        val grabber = new OpenCVFrameGrabber(0) // Use the default webcam
         grabber.start()
         val frame = grabber.grab()
+        grabber.stop()
+
         // Save the frame as an image file
         saveFrameAsImage(frame, "selfie.png")
 
@@ -115,13 +114,8 @@ class WebcamActor extends Actor {
         case Success(colors) =>
           senderRef ! Some(colors)
         case Failure(exception) =>
-          println(s"Failed to capture image: ${exception.getMessage}")
-          senderRef ! Some(Nil)
-      }
-
-      // Stop and release the webcam resource
-      Try(grabber.stop()).recover {
-        case ex: Exception => println(s"Error stopping webcam: ${ex.getMessage}")
+          println(s"Failed to capture colors : ${exception.getMessage}")
+          senderRef ! None
       }
   }
 

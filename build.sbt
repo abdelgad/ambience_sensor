@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
 )
 
 // logger
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.6" // Compatible with SLF4J
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.5.7" // Compatible with SLF4J
 
 // spray-json
 libraryDependencies += "io.spray" %% "spray-json" % "1.3.6"
@@ -30,3 +30,5 @@ libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.1"
 
 // phidget22
 unmanagedJars in Compile += file("lib/phidget22.jar")
+
+fork := true

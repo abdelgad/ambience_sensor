@@ -7,27 +7,14 @@ import scala.concurrent.duration.*
 import scala.util.Success
 import scala.util.Failure
 import spray.json.*
-
 import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import SnapshotJsonProtocol.*
 
 
-// Messages for button events and sensor readings
 case object Start
-
 case object ButtonPressed
-
-case object ReadTemperature
-
-case object ReadHumidity
-
-case object ReadIlluminance
-
-case class DisplayMessage(message: String)
-
-case class SensorReading(value: Double)
 
 
 class SnapshotManager(
@@ -39,19 +26,23 @@ class SnapshotManager(
                        fileServer: ActorRef
                      ) extends Actor {
 
-  private implicit val timeout: Timeout = Timeout(5.seconds) // Timeout for ask pattern
+  private implicit val timeout: Timeout = Timeout(20.seconds) // Timeout for ask pattern
+  private var isRecording = false // Flag to track recording state
 
 
   def receive: Receive = {
     case Start =>
       lcdActor ! DisplayMessage("Press button to record...")
       println("System ready. Press button to record...")
-      fileServer ! NotifySynchronization
+      context.system.scheduler.scheduleWithFixedDelay(0.seconds, 5.seconds, fileServer, NotifySynchronization)
 
     case ButtonPressed =>
-      lcdActor ! DisplayMessage("Recording started...Hold still")
-      println("Recording started...Hold still")
-      collectSensorDataAndSaveSnapshot()
+      if (!isRecording) {
+        lcdActor ! DisplayMessage("Recording...Hold still")
+        println("Recording started")
+        isRecording = true
+        collectSensorDataAndSaveSnapshot()
+      }
 
     case WifiReconnected =>
       fileServer ! NotifySynchronization
@@ -66,7 +57,7 @@ class SnapshotManager(
     val temperatureFuture = (tempSensor ? ReadTemperature).mapTo[Option[SensorReading]]
     val humidityFuture = (humiditySensor ? ReadHumidity).mapTo[Option[SensorReading]]
     val illuminanceFuture = (lightSensor ? ReadIlluminance).mapTo[Option[SensorReading]]
-    val colorsFuture = (webcamActor ? CaptureImage).mapTo[Option[List[String]]] // Expect Option[List[String]]
+    val colorsFuture = (webcamActor ? CaptureImage).mapTo[Option[List[String]]]
 
 
     // Combine the futures
@@ -79,7 +70,7 @@ class SnapshotManager(
       temp <- tempOpt
       humidity <- humidityOpt
       illuminance <- illuminanceOpt
-      colors <- colorsOpt // Unwrap Option[List[String]]
+      colors <- colorsOpt
     } yield {
       Snapshot(
         datetime = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
@@ -94,14 +85,17 @@ class SnapshotManager(
     combinedFuture.onComplete {
       case Success(Some(snapshot)) =>
         saveSnapshot(snapshot)
-        lcdActor ! DisplayMessage("Snapshot saved successfully.")
-        println(s"Snapshot saved: $snapshot")
+        isRecording = false // Reset recording state after saving snapshot
       case Success(None) =>
-        lcdActor ! DisplayMessage("Failed to collect all sensor data.")
+        lcdActor ! DisplayMessage("Failed to collect data !")
+        context.system.scheduler.scheduleOnce(3.seconds, lcdActor, DisplayMessage("Press button to record..."))
         println("Failed to collect all sensor data.")
+        isRecording = false // Reset recording state after saving snapshot
       case Failure(ex) =>
-        lcdActor ! DisplayMessage("Error during data collection.")
+        lcdActor ! DisplayMessage("Failed to collect data !")
+        context.system.scheduler.scheduleOnce(3.seconds, lcdActor, DisplayMessage("Press button to record..."))
         println(s"Error during data collection: ${ex.getMessage}")
+        isRecording = false // Reset recording state after saving snapshot
     }
   }
 
@@ -120,6 +114,8 @@ class SnapshotManager(
     writer.close()
 
     println(s"Snapshot saved to $filePath")
+    lcdActor ! DisplayMessage("Snapshot saved !")
+    context.system.scheduler.scheduleOnce(3.seconds, lcdActor, DisplayMessage("Press button to record..."))
     fileServer ! NotifySynchronization
   }
 }
