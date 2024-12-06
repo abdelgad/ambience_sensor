@@ -1,6 +1,21 @@
 import jssc.{SerialPort, SerialPortException}
+import akka.actor.{Actor, ActorRef}
 
-object ArduinoInterface {
+case class ArduinoReading(data: (Double, Double)) {
+  def bpm: Double = data._1
+  def dbs: Double = data._2
+}
+case object ReadArduino
+
+class Arduino extends Actor {
+  def receive: Receive = {
+    case ReadArduino =>
+      val bpmAnddbs = Try {
+        collectData("COM3", 5)
+      }
+      sender() ! bpmAnddbs.toOption.map{ case (bpm, dbs) => ArduinoReading((bpm, dbs)) }
+  }
+
   def collectData(portName: String, duration: Int): (Int, Int) = {
     val serialPort = new SerialPort(portName)
     try {
