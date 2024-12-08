@@ -17,17 +17,18 @@ case class SensorReading(value: Double)
 
 
 class ForceSensorActor(forceSensor: VoltageRatioInput, snapshotManager: ActorRef) extends Actor {
-  private val ACTIVATION_THRESHOLD = 0.1
+  private val ACTIVATION_THRESHOLD = 0.7
 
 
   override def preStart(): Unit = {
     Try {
       forceSensor.setIsHubPortDevice(true)
-      forceSensor.setHubPort(3)
+      forceSensor.setHubPort(2)
 
       // Set up listener for sensor value changes
       forceSensor.addSensorChangeListener((event: VoltageRatioInputSensorChangeEvent) => {
         val sensorValue = event.getSensorValue
+        println(s"Force sensor detect $sensorValue.")
         if (sensorValue > ACTIVATION_THRESHOLD) {
           // Button press
           snapshotManager ! ButtonPressed
