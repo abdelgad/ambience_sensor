@@ -8,5 +8,5 @@ case class Snapshot(datetime: String, humidity: Double, temperature: Double, ill
 
 // JSON format for Snapshot using spray-json
 object SnapshotJsonProtocol extends DefaultJsonProtocol {
-  implicit val snapshotFormat: RootJsonFormat[Snapshot] = jsonFormat5(Snapshot)
+  implicit val snapshotFormat: RootJsonFormat[Snapshot] = jsonFormat7(Snapshot)
 }

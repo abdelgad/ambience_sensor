@@ -1,6 +1,8 @@
 import jssc.{SerialPort, SerialPortException}
 import akka.actor.{Actor, ActorLogging}
 
+import scala.util.Try
+
 case class ArduinoReading(data: (Double, Double)) {
   def bpm: Double = data._1
   def dbs: Double = data._2
