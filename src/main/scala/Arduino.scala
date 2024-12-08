@@ -13,7 +13,7 @@ class Arduino extends Actor with ActorLogging {
   def receive: Receive = {
     case ReadArduino =>
       val bpmAnddbs = Try {
-        collectData("serial", 5)
+        collectData("/dev/serial", 5)
       }
       sender() ! bpmAnddbs.toOption.map { case (bpm, dbs) => ArduinoReading((bpm, dbs)) }
 
