@@ -45,7 +45,24 @@ class Arduino extends Actor with ActorLogging {
           }
         }
       }
+            // Arrêt de l'enregistrement
       serialPort.writeString("T")
+      Thread.sleep(1000) // Assurer que toutes les données sont reçues
+
+      // Dernière lecture des données
+      val finalData = serialPort.readString()
+      if (finalData != null && finalData.nonEmpty) {
+        finalData.trim.split("\n").foreach { line =>
+          if (line.startsWith("BPM: ")) {
+            bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
+          } else if (line.startsWith("DBS: ")) {
+            line.stripPrefix("DBS: ").split(", ").map(_.trim.toFloat).foreach { soundValue =>
+              soundData = soundData :+ soundValue.toInt
+            }
+          }
+        }
+      }
+      
       (bpm.getOrElse(0), averageL(soundData))
     } catch {
       case ex: SerialPortException =>
