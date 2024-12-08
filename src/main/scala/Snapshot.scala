@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 
 // Case class for Snapshot
 //case class Snapshot(datetime: String, humidity: Double, temperature: Double, illuminance: Double)
-case class Snapshot(datetime: String, humidity: Double, temperature: Double, illuminance: Double, colors: List[String])
+case class Snapshot(datetime: String, humidity: Double, temperature: Double, illuminance: Double, colors: List[String], bpm: Double, dbs: Double)
 
 // JSON format for Snapshot using spray-json
 object SnapshotJsonProtocol extends DefaultJsonProtocol {
