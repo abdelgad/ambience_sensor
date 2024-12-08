@@ -59,7 +59,7 @@ class TemperatureSensorActor(temperatureSensor: TemperatureSensor) extends Actor
         temperatureSensor.close()
         value
       }
-      sender() ! temperature.toOption.map(SensorReading)
+      sender() ! temperature.toOption.map(SensorReading.apply)
   }
 }
 
@@ -73,7 +73,7 @@ class HumiditySensorActor(humiditySensor: HumiditySensor) extends Actor {
         humiditySensor.close()
         value
       }
-      sender() ! humidity.toOption.map(SensorReading)
+      sender() ! humidity.toOption.map(SensorReading.apply)
   }
 }
 
@@ -87,7 +87,7 @@ class LightSensorActor(lightSensor: LightSensor) extends Actor {
         lightSensor.close()
         value
       }
-      sender() ! illuminance.toOption.map(SensorReading)
+      sender() ! illuminance.toOption.map(SensorReading.apply)
   }
 }
 

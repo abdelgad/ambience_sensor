@@ -13,7 +13,7 @@ class Arduino extends Actor with ActorLogging {
   def receive: Receive = {
     case ReadArduino =>
       val bpmAnddbs = Try {
-        collectData("/dev/serial", 5)
+        collectData("/dev/ttyACM0", 5)
       }
       sender() ! bpmAnddbs.toOption.map { case (bpm, dbs) => ArduinoReading((bpm, dbs)) }
 
@@ -39,6 +39,7 @@ class Arduino extends Actor with ActorLogging {
       while (System.currentTimeMillis() - startTime < duration * 1000) {
         Option(serialPort.readString()).foreach { rawData =>
           rawData.trim.split("\n").foreach { line =>
+            print(line)
             if (line.startsWith("BPM: ")) bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
             else if (line.startsWith("DBS: "))
               line.stripPrefix("DBS: ").split(", ").map(_.trim.toIntOption).foreach(_.foreach(soundData :+= _))
