@@ -25,7 +25,7 @@ object AmbienceSensor extends App {
   val ambienceDiffuserPath = "akka://AmbienceDiffuser@ambiencediffuser.local:25521/user/fileClient"
   val fileServerActor = system.actorOf(Props(new FileServerActor("snapshots", ambienceDiffuserPath)), "fileServer")
 
-  val snapshotManager = system.actorOf(Props(new SnapshotManager(lcdActor, tempSensorActor, humiditySensorActor, lightSensorActor, webcam, arduinoActor, fileServerActor)), "snapshotManager")
+  val snapshotManager = system.actorOf(Props(new SnapshotManager(lcdActor, tempSensorActor, humiditySensorActor, lightSensorActor, webcam, fileServerActor, arduinoActor)), "snapshotManager")
 
   val forceSensorActor = system.actorOf(Props(new ForceSensorActor(forceSensor, snapshotManager)), "forceSensor")
   
