@@ -127,7 +127,7 @@ class WebcamActor extends Actor {
 
     if (mat != null && !mat.empty()) {
       imwrite(filename, mat) // Write the Mat to a file
-      println(s"Frame saved as $filename")
+      // println(s"Frame saved as $filename")
     } else {
       println("Failed to save frame: Frame is null or empty.")
     }
