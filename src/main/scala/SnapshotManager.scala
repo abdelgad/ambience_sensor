@@ -23,7 +23,8 @@ class SnapshotManager(
                        humiditySensor: ActorRef,
                        lightSensor: ActorRef,
                        webcamActor: ActorRef,
-                       fileServer: ActorRef
+                       fileServer: ActorRef,
+                       arduino: ActorRef
                      ) extends Actor {
 
   private implicit val timeout: Timeout = Timeout(20.seconds) // Timeout for ask pattern
@@ -59,6 +60,8 @@ class SnapshotManager(
     val illuminanceFuture = (lightSensor ? ReadIlluminance).mapTo[Option[SensorReading]]
     val colorsFuture = (webcamActor ? CaptureImage).mapTo[Option[List[String]]]
 
+    val arduinoFuture = (arduino ? ReadArduino).mapTo[Option[ArduinoReading]]
+    
 
     // Combine the futures
     val combinedFuture: Future[Option[Snapshot]] = for {
@@ -66,18 +69,22 @@ class SnapshotManager(
       humidityOpt <- humidityFuture
       illuminanceOpt <- illuminanceFuture
       colorsOpt <- colorsFuture
+      arduinoOpt <- arduinoFuture
     } yield for {
       temp <- tempOpt
       humidity <- humidityOpt
       illuminance <- illuminanceOpt
       colors <- colorsOpt
+      (bpm,dbs) <- arduinoOpt
     } yield {
       Snapshot(
         datetime = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
         humidity = humidity.value,
         temperature = temp.value,
         illuminance = illuminance.value,
-        colors = colors
+        colors = colors,
+        bpm = bpm,
+        dbs = dbs
       )
     }
 
