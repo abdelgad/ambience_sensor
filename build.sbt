@@ -1,11 +1,20 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "1.0.0"
 
 ThisBuild / scalaVersion := "3.3.4"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "ambience_sensor"
+    name := "ambience_sensor",
+	  assembly / mainClass := Some("AmbienceSensor")
   )
+
+import sbtassembly.AssemblyPlugin.autoImport._
+
+assembly / assemblyMergeStrategy := {
+  case PathList("META-INF", "native-image", _ @ _*) => MergeStrategy.discard
+  case "reference.conf" => MergeStrategy.concat
+  case x => MergeStrategy.first
+}
 
 // akka
 resolvers += "Akka library repository".at("https://repo.akka.io/maven")
@@ -33,6 +42,6 @@ libraryDependencies += "org.bytedeco" % "javacv-platform" % "1.5.11"
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "3.1.1"
 
 // phidget22
-unmanagedJars in Compile += file("lib/phidget22.jar")
+Compile / unmanagedJars += file("lib/phidget22.jar")
 
-fork := true
+Compile / resourceDirectory := baseDirectory.value / "src" / "main" / "resources"

@@ -27,7 +27,7 @@ class SnapshotManager(
                        arduino: ActorRef
                      ) extends Actor {
 
-  private implicit val timeout: Timeout = Timeout(20.seconds) // Timeout for ask pattern
+  private implicit val timeout: Timeout = Timeout(40.seconds) // Timeout for ask pattern
   private var isRecording = false // Flag to track recording state
 
 
@@ -75,16 +75,16 @@ class SnapshotManager(
       humidity <- humidityOpt
       illuminance <- illuminanceOpt
       colors <- colorsOpt
-      (bpm,dbs) <- arduinoOpt
+      arduino <- arduinoOpt
     } yield {
-      Snapshot(
+        Snapshot(
         datetime = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
         humidity = humidity.value,
         temperature = temp.value,
         illuminance = illuminance.value,
         colors = colors,
-        bpm = bpm,
-        dbs = dbs
+        bpm = arduino.data(0),
+        dbs = arduino.data(1)
       )
     }
 

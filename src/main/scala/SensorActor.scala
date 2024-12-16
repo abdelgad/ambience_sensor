@@ -17,13 +17,13 @@ case class SensorReading(value: Double)
 
 
 class ForceSensorActor(forceSensor: VoltageRatioInput, snapshotManager: ActorRef) extends Actor {
-  private val ACTIVATION_THRESHOLD = 0.1
+  private val ACTIVATION_THRESHOLD = 0.5
 
 
   override def preStart(): Unit = {
     Try {
       forceSensor.setIsHubPortDevice(true)
-      forceSensor.setHubPort(3)
+      forceSensor.setHubPort(2)
 
       // Set up listener for sensor value changes
       forceSensor.addSensorChangeListener((event: VoltageRatioInputSensorChangeEvent) => {
@@ -59,7 +59,7 @@ class TemperatureSensorActor(temperatureSensor: TemperatureSensor) extends Actor
         temperatureSensor.close()
         value
       }
-      sender() ! temperature.toOption.map(SensorReading)
+      sender() ! temperature.toOption.map(SensorReading.apply)
   }
 }
 
@@ -73,7 +73,7 @@ class HumiditySensorActor(humiditySensor: HumiditySensor) extends Actor {
         humiditySensor.close()
         value
       }
-      sender() ! humidity.toOption.map(SensorReading)
+      sender() ! humidity.toOption.map(SensorReading.apply)
   }
 }
 
@@ -87,7 +87,7 @@ class LightSensorActor(lightSensor: LightSensor) extends Actor {
         lightSensor.close()
         value
       }
-      sender() ! illuminance.toOption.map(SensorReading)
+      sender() ! illuminance.toOption.map(SensorReading.apply)
   }
 }
 
@@ -127,7 +127,7 @@ class WebcamActor extends Actor {
 
     if (mat != null && !mat.empty()) {
       imwrite(filename, mat) // Write the Mat to a file
-      println(s"Frame saved as $filename")
+      // println(s"Frame saved as $filename")
     } else {
       println("Failed to save frame: Frame is null or empty.")
     }

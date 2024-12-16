@@ -1,6 +1,8 @@
 import jssc.{SerialPort, SerialPortException}
 import akka.actor.{Actor, ActorLogging}
 
+import scala.util.Try
+
 case class ArduinoReading(data: (Double, Double)) {
   def bpm: Double = data._1
   def dbs: Double = data._2
@@ -11,7 +13,7 @@ class Arduino extends Actor with ActorLogging {
   def receive: Receive = {
     case ReadArduino =>
       val bpmAnddbs = Try {
-        collectData("COM3", 5)
+        collectData("/dev/ttyACM0", 5)
       }
       sender() ! bpmAnddbs.toOption.map { case (bpm, dbs) => ArduinoReading((bpm, dbs)) }
 
@@ -37,13 +39,31 @@ class Arduino extends Actor with ActorLogging {
       while (System.currentTimeMillis() - startTime < duration * 1000) {
         Option(serialPort.readString()).foreach { rawData =>
           rawData.trim.split("\n").foreach { line =>
+            print(line)
             if (line.startsWith("BPM: ")) bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
             else if (line.startsWith("DBS: "))
               line.stripPrefix("DBS: ").split(", ").map(_.trim.toIntOption).foreach(_.foreach(soundData :+= _))
           }
         }
       }
+            // Arrêt de l'enregistrement
       serialPort.writeString("T")
+      Thread.sleep(1000) // Assurer que toutes les données sont reçues
+
+      // Dernière lecture des données
+      val finalData = serialPort.readString()
+      if (finalData != null && finalData.nonEmpty) {
+        finalData.trim.split("\n").foreach { line =>
+          if (line.startsWith("BPM: ")) {
+            bpm = Some(line.stripPrefix("BPM: ").trim.toInt)
+          } else if (line.startsWith("DBS: ")) {
+            line.stripPrefix("DBS: ").split(", ").map(_.trim.toFloat).foreach { soundValue =>
+              soundData = soundData :+ soundValue.toInt
+            }
+          }
+        }
+      }
+      
       (bpm.getOrElse(0), averageL(soundData))
     } catch {
       case ex: SerialPortException =>
